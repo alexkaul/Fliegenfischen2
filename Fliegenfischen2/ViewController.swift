@@ -9,8 +9,9 @@
 import UIKit
 import Charts
 import CoreMotion
+import CoreData
 
-class ViewController: UIViewController, ChartViewDelegate {
+class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
     
     let cmMotionManager = CMMotionManager()
     var nsOperationQueue = OperationQueue()
@@ -22,6 +23,8 @@ class ViewController: UIViewController, ChartViewDelegate {
     @IBOutlet weak var lineChartView: LineChartView!
     @IBOutlet weak var timeLabel: UILabel!
     
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+  
     @IBAction func startRecording(_ sender: AnyObject) {
         countdownSeconds = 8
         if (dataSets.count > 1) {
@@ -41,7 +44,7 @@ class ViewController: UIViewController, ChartViewDelegate {
                 let gravity:CMAcceleration = motion!.gravity
                 let accX = gravity.x
                 self.sensorAccX.append(accX)
-            }           
+            }
         })
         
         timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(ViewController.update), userInfo: nil, repeats: true)
@@ -186,7 +189,7 @@ class ViewController: UIViewController, ChartViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.cmMotionManager.deviceMotionUpdateInterval = 0.01
+        self.cmMotionManager.deviceMotionUpdateInterval = 0.005
         
         self.lineChartView.delegate = self
         self.lineChartView.chartDescription?.text = "x Beschleunigung"
