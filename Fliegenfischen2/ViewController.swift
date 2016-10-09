@@ -23,16 +23,28 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
     @IBOutlet weak var lineChartView: LineChartView!
     @IBOutlet weak var timeLabel: UILabel!
     
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
+    //let sensorData = NSEntityDescription.insertNewObject(forEntityName: "SensorData", into: context)
   
     @IBAction func startRecording(_ sender: AnyObject) {
+        
+        //Neuen Context (Verknüpfung zu CoreData) erstellen
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        
+        //Wieviele Sekunden aufgenommen werden soll
         countdownSeconds = 8
+        
+        //Es soll (vorerst) nur ein aufgenommener Datensatz angezeigt werden
         if (dataSets.count > 1) {
             dataSets.removeLast()
         }
         
+        //Neuen Datensatz erstellen
+        let recordedDataSet = RecordedDataSet(context: context)
+        
         sensorAccX = []
         
+        //Wenn die App im Simulator läuft, ist test = false => kein DeviceMotion available
         //var test = cmMotionManager.isDeviceMotionAvailable
         
         self.cmMotionManager.startDeviceMotionUpdates(to: nsOperationQueue, withHandler: {
@@ -41,11 +53,51 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
             if(error != nil) {
                 NSLog("\(error)")
             } else {
+                //Die Aufgenommenen Werte speichern
+                let timestamp:NSDate = NSDate()
+                
                 let gravity:CMAcceleration = motion!.gravity
+                let rotation:CMRotationRate = motion!.rotationRate
+                let attitude:CMAttitude = motion!.attitude
+                
                 let accX = gravity.x
+                let accY = gravity.y
+                let accZ = gravity.z
+                
+                let rotX = rotation.x
+                let rotY = rotation.y
+                let rotZ = rotation.z
+                
+                let yaw = attitude.yaw
+                let roll = attitude.roll
+                let pitch = attitude.pitch
+                
+                //Die aufgenommenen Daten in ein SensorData Objekt speichern
+                let sensorData = SensorData(context: context)
+                sensorData.loggingTime = timestamp
+                sensorData.accelerationX = accX
+                sensorData.accelerationY = accY
+                sensorData.accelerationZ = accZ
+                
+                sensorData.rotationX = rotX
+                sensorData.rotationY = rotY
+                sensorData.rotationZ = rotZ
+                
+                sensorData.motionYaw = yaw
+                sensorData.motionRoll = roll
+                sensorData.motionPitch = pitch
+                
+                //Die gerade aufgenommenen Werte dem Datensatz hinzufügen
+                recordedDataSet.addToSensorData(sensorData)
+                
                 self.sensorAccX.append(accX)
             }
         })
+        
+        
+        //Daten in CoreData speichern
+        (UIApplication.shared.delegate as! AppDelegate).saveContext()
+        
         
         timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(ViewController.update), userInfo: nil, repeats: true)
     }
