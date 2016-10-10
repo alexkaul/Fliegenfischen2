@@ -11,7 +11,7 @@ import Charts
 import CoreMotion
 import CoreData
 
-class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
+class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, UITableViewDataSource, UITableViewDelegate {
     
     let cmMotionManager = CMMotionManager()
     var nsOperationQueue = OperationQueue()
@@ -19,8 +19,12 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
     var timer:Timer!
     var sensorAccX:[Double]!
     var dataSets: [LineChartDataSet] = [LineChartDataSet]()
+    
+    //Für die TableView
+    var recordedDataSets: [RecordedDataSet] = []
 
     @IBOutlet weak var lineChartView: LineChartView!
+    @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var timeLabel: UILabel!
     
     
@@ -28,11 +32,13 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
   
     @IBAction func startRecording(_ sender: AnyObject) {
         
+  
+        
         //Neuen Context (Verknüpfung zu CoreData) erstellen
         let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
         
         //Wieviele Sekunden aufgenommen werden soll
-        countdownSeconds = 8
+        countdownSeconds = 12
         
         //Es soll (vorerst) nur ein aufgenommener Datensatz angezeigt werden
         if (dataSets.count > 1) {
@@ -41,6 +47,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
         
         //Neuen Datensatz erstellen
         let recordedDataSet = RecordedDataSet(context: context)
+        recordedDataSet.recordingTime = NSDate()
         
         sensorAccX = []
         
@@ -74,6 +81,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
                 
                 //Die aufgenommenen Daten in ein SensorData Objekt speichern
                 let sensorData = SensorData(context: context)
+                
                 sensorData.loggingTime = timestamp
                 sensorData.accelerationX = accX
                 sensorData.accelerationY = accY
@@ -98,6 +106,11 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
         //Daten in CoreData speichern
         (UIApplication.shared.delegate as! AppDelegate).saveContext()
         
+        //Daten aus CoreData laden
+        getData()
+        
+        //TableView neu laden
+        tableView.reloadData()
         
         timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(ViewController.update), userInfo: nil, repeats: true)
     }
@@ -241,6 +254,11 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView.dataSource = self
+        tableView.delegate = self
+        
+        
         self.cmMotionManager.deviceMotionUpdateInterval = 0.005
         
         self.lineChartView.delegate = self
@@ -259,6 +277,15 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
         self.lineChartView.xAxis.drawGridLinesEnabled = false
         
         sChartData(xAchse: xAchse)
+    }
+    
+    
+    override func viewWillAppear(_ animated: Bool) {
+        //Daten aus CoreData laden
+        getData()
+        
+        //TableView neu laden
+        tableView.reloadData()
     }
     
     func sChartData(xAchse:[String]) {
@@ -318,8 +345,45 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate {
         let data:LineChartData = LineChartData(dataSets: dataSets)
         self.lineChartView.data = data
     }
-
-
+    
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return recordedDataSets.count
+    }
+    
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = UITableViewCell()
+        
+        let recordedDataSet = recordedDataSets[indexPath.row]
+        
+        let timestamp = recordedDataSet.recordingTime
+        var dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd-MM-yyyy hh:mm:ss"
+        var timestampString = "test"
+        if timestamp != nil {
+            timestampString = dateFormatter.string(from: timestamp as! Date)
+        }
+        
+        
+        cell.textLabel?.text = timestampString
+        
+        return cell
+    }
+    
+    
+    func getData() {
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        
+        do {
+            recordedDataSets = try context.fetch(RecordedDataSet.fetchRequest())
+        } catch {
+            print("Fetching failed")
+        }
+        
+    }
+    
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
