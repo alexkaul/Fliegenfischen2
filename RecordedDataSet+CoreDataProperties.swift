@@ -2,7 +2,7 @@
 //  RecordedDataSet+CoreDataProperties.swift
 //  Fliegenfischen2
 //
-//  Created by Alexandra Kaulfuss on 04.10.16.
+//  Created by Alexandra Kaulfuss on 16.10.16.
 //  Copyright © 2016 Alexandra Kaulfuss. All rights reserved.
 //
 

@@ -17,7 +17,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     var nsOperationQueue = OperationQueue()
     var countdownSeconds = 5
     var timer:Timer!
-    var sensorAccX:[Double]!
+    //var sensorAccX:[Double]!  //veraltet
     var dataSets: [LineChartDataSet] = [LineChartDataSet]()
     
     //Für die TableView
@@ -31,8 +31,6 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     //let sensorData = NSEntityDescription.insertNewObject(forEntityName: "SensorData", into: context)
   
     @IBAction func startRecording(_ sender: AnyObject) {
-        
-  
         
         //Neuen Context (Verknüpfung zu CoreData) erstellen
         let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
@@ -49,7 +47,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         let recordedDataSet = RecordedDataSet(context: context)
         recordedDataSet.recordingTime = NSDate()
         
-        sensorAccX = []
+        //Veraltet:
+        //sensorAccX = []
         
         //Wenn die App im Simulator läuft, ist test = false => kein DeviceMotion available
         //var test = cmMotionManager.isDeviceMotionAvailable
@@ -98,7 +97,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
                 //Die gerade aufgenommenen Werte dem Datensatz hinzufügen
                 recordedDataSet.addToSensorData(sensorData)
                 
-                self.sensorAccX.append(accX)
+                //self.sensorAccX.append(accX)
             }
         })
         
@@ -115,9 +114,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(ViewController.update), userInfo: nil, repeats: true)
     }
     
-    let xAchse = ["Test1", "Test2", "Test3", "Test4"]
-    
-    let yAchse = [-0.8055419921875,-0.8029022216796875,-0.7998199462890625,-0.80120849609375,-0.8016815185546875,-0.796844482421875,-0.8037109375,-0.8090057373046875,-0.8033599853515625,-0.8074188232421875,
+    let expertAccXvalues = [-0.8055419921875,-0.8029022216796875,-0.7998199462890625,-0.80120849609375,-0.8016815185546875,-0.796844482421875,-0.8037109375,-0.8090057373046875,-0.8033599853515625,-0.8074188232421875,
                   -0.8034210205078125,-0.794586181640625,-0.7899017333984375,-0.7906951904296875,-0.814178466796875,-0.773468017578125,-0.7949371337890625,-0.7954864501953125,-0.7925262451171875,-0.79779052734375,
                   -0.7798919677734375,-0.7868804931640625,-0.7945556640625,-0.7928009033203125,-0.7996978759765625,-0.7996673583984375,-0.8056793212890625,-0.8058624267578125,-0.8063507080078125,-0.8069305419921875,
                   -0.8065032958984375,-0.813323974609375,-0.8137664794921875,-0.81878662109375,-0.822845458984375,-0.820526123046875,-0.832061767578125,-0.822174072265625,-0.8259124755859375,-0.826934814453125,
@@ -252,14 +249,15 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     
     
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         tableView.dataSource = self
         tableView.delegate = self
         
-        
-        self.cmMotionManager.deviceMotionUpdateInterval = 0.005
+        //Bei einem kürzeren Updateintervall (z.B. 0.01) stürzt leider das iPad ab
+        self.cmMotionManager.deviceMotionUpdateInterval = 0.05
         
         self.lineChartView.delegate = self
         self.lineChartView.chartDescription?.text = "x Beschleunigung"
@@ -276,7 +274,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         self.lineChartView.xAxis.drawAxisLineEnabled = false
         self.lineChartView.xAxis.drawGridLinesEnabled = false
         
-        sChartData(xAchse: xAchse)
+        printExpertGraph()
     }
     
     
@@ -288,10 +286,22 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         tableView.reloadData()
     }
     
-    func sChartData(xAchse:[String]) {
+    func printExpertGraph() {
+        
+        //print(expertAccXvalues.count)   //im Array sind z.Z. 1361 Werte
+        
+        //Von den Expertenwerten wird erstmal nur jeder 4. genommen, damit die Anzahl etwa im den aufgenommenen Werten übereinstimmt
+        //Synchronisation von Experten- und aufgenommenen Werten muss grundsätzlich überarbeitet werden
+        var expertAccXvalues2: [Double] = []
+        for i in 0 ..< expertAccXvalues.count {
+            if i%4 == 0 {
+                expertAccXvalues2.append(expertAccXvalues[i])
+            }
+        }
+        
         var yWerte:[ChartDataEntry] = [ChartDataEntry]()
-        for i in 0 ..< yAchse.count {
-            yWerte.append(ChartDataEntry(x: Double(i), y: yAchse[i]))
+        for i in 0 ..< expertAccXvalues2.count {
+            yWerte.append(ChartDataEntry(x: Double(i), y: expertAccXvalues2[i]))
         }
         
         let set:LineChartDataSet = LineChartDataSet(values: yWerte, label: "Experte")
@@ -332,41 +342,52 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     }
     
     func printRecordedData() {
-        var yValues:[ChartDataEntry] = [ChartDataEntry]()
-        for i in 0 ..< sensorAccX.count {
-            yValues.append(ChartDataEntry(x: Double(i), y: sensorAccX[i]))
-        }
-        let set:LineChartDataSet = LineChartDataSet(values: yValues, label: "Aufzeichnung")
-        set.axisDependency = .left
-        set.mode = .cubicBezier
-        set.drawCirclesEnabled = false
-        set.colors = [UIColor.red]
-        dataSets.append(set)
-        let data:LineChartData = LineChartData(dataSets: dataSets)
-        self.lineChartView.data = data
+        //var yValues:[ChartDataEntry] = [ChartDataEntry]()
+        //for i in 0 ..< sensorAccX.count {
+        //    yValues.append(ChartDataEntry(x: Double(i), y: sensorAccX[i]))
+        //}
+        //let set:LineChartDataSet = LineChartDataSet(values: yValues, label: "Aufzeichnung")
+        //set.axisDependency = .left
+        //set.mode = .cubicBezier
+        //set.drawCirclesEnabled = false
+        //set.colors = [UIColor.red]
+        //dataSets.append(set)
+        //let data:LineChartData = LineChartData(dataSets: dataSets)
+        //self.lineChartView.data = data
     }
     
     
+    /**
+     Gibt die Anzahl der aufgenommenen Datensätze = Anzahl der Tabellenzeilen zurück
+     */
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return recordedDataSets.count
     }
     
     
+    /**
+     Schreibt die aufgenommenen Datensätze in die Tabellenzeilen
+     */
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         
         let recordedDataSet = recordedDataSets[indexPath.row]
         
         let timestamp = recordedDataSet.recordingTime
-        var dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd-MM-yyyy hh:mm:ss"
-        var timestampString = "test"
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yyyy"
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm:ss"
+        var dateString = "Placeholder"
+        var timeString = "Placeholder"
+        
         if timestamp != nil {
-            timestampString = dateFormatter.string(from: timestamp as! Date)
+            dateString = dateFormatter.string(from: timestamp as! Date)
+            timeString = timeFormatter.string(from: timestamp as! Date)
         }
         
-        
-        cell.textLabel?.text = timestampString
+        cell.textLabel?.text = "\(dateString) - \(timeString) Uhr"
         
         return cell
     }
@@ -383,6 +404,84 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
     }
     
+    //Die Funktion löscht einen Datensatz aus der Tabelle, wenn geswiped wird
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        
+        if editingStyle == .delete {
+            let recordedDataSet = recordedDataSets[indexPath.row]
+            context.delete(recordedDataSet)
+            (UIApplication.shared.delegate as! AppDelegate).saveContext()
+            
+            do {
+                recordedDataSets = try context.fetch(RecordedDataSet.fetchRequest())
+            } catch {
+                print("Fetching failed")
+            }
+        }
+        tableView.reloadData()
+    }
+
+    
+    /**
+     Wenn eine Zeile in der Tabelle angeklickt wird:
+    */
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        var accX: [Double] = []
+        let recordedDataSet = recordedDataSets[indexPath.row]
+        let sensorDatas = recordedDataSet.sensorData
+        
+        for sensorData in sensorDatas! {
+            accX.append((sensorData as! SensorData).accelerationX)
+        }
+        
+        //Die Beschriftung für den Graph erstellen:
+        let timestamp = recordedDataSet.recordingTime
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yyyy"
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm:ss"
+        var dateString = "Placeholder"
+        var timeString = "Placeholder"
+        
+        if timestamp != nil {
+            dateString = dateFormatter.string(from: timestamp as! Date)
+            timeString = timeFormatter.string(from: timestamp as! Date)
+        }
+        
+        let graphLabelText = "\(dateString) - \(timeString)"
+        
+        
+        //Das Chart updaten:
+        
+        //Den letzten angezeigten Datensatz entfernen, Expertendaten da lassen
+        if (dataSets.count > 1) {
+            dataSets.removeLast()
+        }
+        
+        var yValues:[ChartDataEntry] = [ChartDataEntry]()
+        for i in 0 ..< accX.count {
+            yValues.append(ChartDataEntry(x: Double(i), y: accX[i]))
+        }
+        
+        
+        let set:LineChartDataSet = LineChartDataSet(values: yValues, label: graphLabelText)
+        set.axisDependency = .left
+        set.mode = .cubicBezier
+        set.drawCirclesEnabled = false
+        set.colors = [UIColor.red]
+        dataSets.append(set)
+        let data:LineChartData = LineChartData(dataSets: dataSets)
+        self.lineChartView.data = data
+        
+    }
+    
+    /**
+     Wenn eine Zeile abgewählt wird:
+     */
+    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+
+    }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
