@@ -16,8 +16,9 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     let cmMotionManager = CMMotionManager()
     var nsOperationQueue = OperationQueue()
     var countdownSeconds = 5
-    var timer:Timer!
-    //var sensorAccX:[Double]!  //veraltet
+    var timer: Timer!
+    var timestampArray: [NSDate] = []
+    var accXArray: [Double] = []
     var dataSets: [LineChartDataSet] = [LineChartDataSet]()
     
     //Für die TableView
@@ -32,9 +33,6 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
   
     @IBAction func startRecording(_ sender: AnyObject) {
         
-        //Neuen Context (Verknüpfung zu CoreData) erstellen
-        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-        
         //Wieviele Sekunden aufgenommen werden soll
         countdownSeconds = 12
         
@@ -43,76 +41,43 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
             dataSets.removeLast()
         }
         
-        //Neuen Datensatz erstellen
-        let recordedDataSet = RecordedDataSet(context: context)
-        recordedDataSet.recordingTime = NSDate()
-        
-        //Veraltet:
-        //sensorAccX = []
+        timestampArray = []
+        accXArray = []
         
         //Wenn die App im Simulator läuft, ist test = false => kein DeviceMotion available
         //var test = cmMotionManager.isDeviceMotionAvailable
         
-        self.cmMotionManager.startDeviceMotionUpdates(to: nsOperationQueue, withHandler: {
+        self.cmMotionManager.startAccelerometerUpdates(to: nsOperationQueue, withHandler: {
             
-            (motion, error) -> Void in
+            (accelSensor, error) -> Void in
             if(error != nil) {
                 NSLog("\(error)")
             } else {
                 //Die Aufgenommenen Werte speichern
                 let timestamp:NSDate = NSDate()
                 
-                let gravity:CMAcceleration = motion!.gravity
-                let rotation:CMRotationRate = motion!.rotationRate
-                let attitude:CMAttitude = motion!.attitude
+                let accel = accelSensor!.acceleration
                 
-                let accX = gravity.x
-                let accY = gravity.y
-                let accZ = gravity.z
+                let accX = accel.x
+//                let accY = accel.y
+//                let accZ = accel.z
                 
-                let rotX = rotation.x
-                let rotY = rotation.y
-                let rotZ = rotation.z
-                
-                let yaw = attitude.yaw
-                let roll = attitude.roll
-                let pitch = attitude.pitch
-                
-                //Die aufgenommenen Daten in ein SensorData Objekt speichern
-                let sensorData = SensorData(context: context)
-                
-                sensorData.loggingTime = timestamp
-                sensorData.accelerationX = accX
-                sensorData.accelerationY = accY
-                sensorData.accelerationZ = accZ
-                
-                sensorData.rotationX = rotX
-                sensorData.rotationY = rotY
-                sensorData.rotationZ = rotZ
-                
-                sensorData.motionYaw = yaw
-                sensorData.motionRoll = roll
-                sensorData.motionPitch = pitch
-                
-                //Die gerade aufgenommenen Werte dem Datensatz hinzufügen
-                recordedDataSet.addToSensorData(sensorData)
-                
-                //self.sensorAccX.append(accX)
+                //Die folgenden Werte müssen vom MotionSensor ausgelesen werden, nicht vom AccelerationSensor
+//                let rotX = 0.0
+//                let rotY = 0.0
+//                let rotZ = 0.0
+//                
+//                let yaw = 0.0
+//                let roll = 0.0
+//                let pitch = 0.0
+
+                self.timestampArray.append(timestamp)
+                self.accXArray.append(accX)
             }
         })
-        
-        
-        //Daten in CoreData speichern
-        (UIApplication.shared.delegate as! AppDelegate).saveContext()
-        
-        //Daten aus CoreData laden
-        getData()
-        
-        //TableView neu laden
-        tableView.reloadData()
-        
         timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(ViewController.update), userInfo: nil, repeats: true)
     }
+    
     
     let expertAccXvalues = [-0.8055419921875,-0.8029022216796875,-0.7998199462890625,-0.80120849609375,-0.8016815185546875,-0.796844482421875,-0.8037109375,-0.8090057373046875,-0.8033599853515625,-0.8074188232421875,
                   -0.8034210205078125,-0.794586181640625,-0.7899017333984375,-0.7906951904296875,-0.814178466796875,-0.773468017578125,-0.7949371337890625,-0.7954864501953125,-0.7925262451171875,-0.79779052734375,
@@ -256,8 +221,9 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         tableView.dataSource = self
         tableView.delegate = self
         
-        //Bei einem kürzeren Updateintervall (z.B. 0.01) stürzt leider das iPad ab
-        self.cmMotionManager.deviceMotionUpdateInterval = 0.05
+        //Device MotionManager für andere Sensordaten als Accelaration benutzen
+        //self.cmMotionManager.deviceMotionUpdateInterval = 0.05
+        self.cmMotionManager.accelerometerUpdateInterval = 0.01
         
         self.lineChartView.delegate = self
         self.lineChartView.chartDescription?.text = "x Beschleunigung"
@@ -292,13 +258,14 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         //Von den Expertenwerten wird erstmal nur jeder 4. genommen, damit die Anzahl etwa im den aufgenommenen Werten übereinstimmt
         //Synchronisation von Experten- und aufgenommenen Werten muss grundsätzlich überarbeitet werden
-        var expertAccXvalues2: [Double] = []
-        for i in 0 ..< expertAccXvalues.count {
-            if i%4 == 0 {
-                expertAccXvalues2.append(expertAccXvalues[i])
-            }
-        }
-        
+        var expertAccXvalues2 = expertAccXvalues
+//        var expertAccXvalues2: [Double] = []
+//        for i in 0 ..< expertAccXvalues.count {
+//            if i%4 == 0 {
+//                expertAccXvalues2.append(expertAccXvalues[i])
+//            }
+//        }
+//        
         var yWerte:[ChartDataEntry] = [ChartDataEntry]()
         for i in 0 ..< expertAccXvalues2.count {
             yWerte.append(ChartDataEntry(x: Double(i), y: expertAccXvalues2[i]))
@@ -334,27 +301,59 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
             timeLabel.text = String(countdownSeconds) + " Sekunden"
             countdownSeconds -= 1
         } else {
-            printRecordedData()
             timeLabel.text = "Verbleibende Zeit"
-            cmMotionManager.stopDeviceMotionUpdates()
+            //cmMotionManager.stopDeviceMotionUpdates()
+            cmMotionManager.stopAccelerometerUpdates()
             timer.invalidate()
+            saveDataToCoreData()
         }
     }
     
-    func printRecordedData() {
-        //var yValues:[ChartDataEntry] = [ChartDataEntry]()
-        //for i in 0 ..< sensorAccX.count {
-        //    yValues.append(ChartDataEntry(x: Double(i), y: sensorAccX[i]))
-        //}
-        //let set:LineChartDataSet = LineChartDataSet(values: yValues, label: "Aufzeichnung")
-        //set.axisDependency = .left
-        //set.mode = .cubicBezier
-        //set.drawCirclesEnabled = false
-        //set.colors = [UIColor.red]
-        //dataSets.append(set)
-        //let data:LineChartData = LineChartData(dataSets: dataSets)
-        //self.lineChartView.data = data
+    func saveDataToCoreData() {
+        
+        
+        //Neuen Context (Verknüpfung zu CoreData) erstellen
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        
+        
+        //Neuen Datensatz erstellen
+        let recordedDataSet = RecordedDataSet(context: context)
+        recordedDataSet.recordingTime = timestampArray[0]
+        
+        
+        for i in 0..<timestampArray.count {
+            
+            //Die aufgenommenen Daten in ein SensorData Objekt speichern
+            let sensorData = SensorData(context: context)
+            
+            sensorData.loggingTime = timestampArray[i] as Date
+            sensorData.accelerationX = accXArray[i]
+            sensorData.accelerationY = 0.0
+            sensorData.accelerationZ = 0.0
+            
+            sensorData.rotationX = 0.0
+            sensorData.rotationY = 0.0
+            sensorData.rotationZ = 0.0
+            
+            sensorData.motionYaw = 0.0
+            sensorData.motionRoll = 0.0
+            sensorData.motionPitch = 0.0
+            
+            //Die gerade aufgenommenen Werte dem Datensatz hinzufügen
+            recordedDataSet.addToSensorData(sensorData)
+        }
+        
+        //Daten in CoreData speichern
+        (UIApplication.shared.delegate as! AppDelegate).saveContext()
+        
+        //Daten aus CoreData laden
+        getData()
+        
+        //TableView neu laden
+        tableView.reloadData()
+        
     }
+
     
     
     /**
@@ -404,7 +403,9 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
     }
     
-    //Die Funktion löscht einen Datensatz aus der Tabelle, wenn geswiped wird
+    /**
+     Die Funktion löscht einen Datensatz aus der Tabelle, wenn geswiped wird
+    */
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
         
@@ -427,12 +428,22 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
      Wenn eine Zeile in der Tabelle angeklickt wird:
     */
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
         var accX: [Double] = []
+        var sensorDataArray: [SensorData] = []
+        
         let recordedDataSet = recordedDataSets[indexPath.row]
         let sensorDatas = recordedDataSet.sensorData
         
         for sensorData in sensorDatas! {
-            accX.append((sensorData as! SensorData).accelerationX)
+            sensorDataArray.append(sensorData as! SensorData)
+        }
+    
+        //SensorDaten werden als unsortiertes Set geladen, hier nach Zeit sortieren:
+        sensorDataArray.sort{$0.loggingTime < $1.loggingTime}
+            
+        for i in 0..<sensorDataArray.count {
+            accX.append(sensorDataArray[i].accelerationX)
         }
         
         //Die Beschriftung für den Graph erstellen:

@@ -18,7 +18,7 @@ extension SensorData {
     @NSManaged public var accelerationX: Double
     @NSManaged public var accelerationY: Double
     @NSManaged public var accelerationZ: Double
-    @NSManaged public var loggingTime: NSDate?
+    @NSManaged public var loggingTime: Date
     @NSManaged public var motionPitch: Double
     @NSManaged public var motionRoll: Double
     @NSManaged public var motionYaw: Double
