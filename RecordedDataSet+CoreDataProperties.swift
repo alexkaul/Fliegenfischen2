@@ -16,7 +16,7 @@ extension RecordedDataSet {
     }
 
     @NSManaged public var id: Int64
-    @NSManaged public var recordingTime: NSDate?
+    @NSManaged public var recordingTime: Date?
     @NSManaged public var sensorData: NSSet?
 
 }
