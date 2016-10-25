@@ -38,64 +38,32 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     var nsOperationQueue = OperationQueue()
     var countdownSeconds = 0
     var timer: Timer!
-    var timestampArray: [NSDate] = []
+    
+    //In diesen Arrays werden die aufgenommen Sensordaten zwischengespeichert, bis sie persistiert werden
+    var timestampArray: [Date] = []
     var accXArray: [Double] = []
+    var accYArray: [Double] = []
+    var accZArray: [Double] = []
+    var rotXArray: [Double] = []
+    var rotYArray: [Double] = []
+    var rotZArray: [Double] = []
+    var yawArray: [Double] = []
+    var rollArray: [Double] = []
+    var pitchArray: [Double] = []
+    
+    var selectedSensor = 2
+    
+    
     var dataSets: [LineChartDataSet] = [LineChartDataSet]()
     
     //Für die TableView
     var recordedDataSets: [RecordedDataSet] = []
+    
+    @IBOutlet weak var sensorSelector: UISegmentedControl!
 
     @IBOutlet weak var lineChartView: LineChartView!
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var timeLabel: UILabel!
-    
-  
-    @IBAction func startRecording(_ sender: AnyObject) {
-        
-        //Wieviele Sekunden aufgenommen werden soll
-        countdownSeconds = 12
-        
-        //Es soll (vorerst) nur ein aufgenommener Datensatz angezeigt werden
-        if (dataSets.count > 1) {
-            dataSets.removeLast()
-        }
-        
-        timestampArray = []
-        accXArray = []
-        
-        //Wenn die App im Simulator läuft, ist test = false => kein DeviceMotion available
-        //var test = cmMotionManager.isDeviceMotionAvailable
-        
-        self.cmMotionManager.startAccelerometerUpdates(to: nsOperationQueue, withHandler: {
-            
-            (accelSensor, error) -> Void in
-            if(error != nil) {
-                NSLog("\(error)")
-            } else {
-                //Werte aufnehmen
-                let timestamp:NSDate = NSDate()
-               
-                let accel = accelSensor!.acceleration
-                let accX = accel.x
-
-//                let accY = accel.y
-//                let accZ = accel.z
-                
-                //Die folgenden Werte müssen vom MotionSensor ausgelesen werden, nicht vom AccelerationSensor
-//                let rotX = 0.0
-//                let rotY = 0.0
-//                let rotZ = 0.0
-//                
-//                let yaw = 0.0
-//                let roll = 0.0
-//                let pitch = 0.0
-
-                self.timestampArray.append(timestamp)
-                self.accXArray.append(accX)
-            }
-        })
-        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(ViewController.update), userInfo: nil, repeats: true)
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -104,17 +72,15 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         tableView.delegate = self
         
         //Device MotionManager für andere Sensordaten als Accelaration benutzen
-        //self.cmMotionManager.deviceMotionUpdateInterval = 0.05
+        self.cmMotionManager.deviceMotionUpdateInterval = 0.01
         self.cmMotionManager.accelerometerUpdateInterval = 0.01
         
         self.lineChartView.delegate = self
-        self.lineChartView.chartDescription?.text = "x Beschleunigung"
+        self.lineChartView.chartDescription?.text = ""
         self.lineChartView.noDataText = "keine Daten vorhanden"
-        
         
         self.lineChartView.leftAxis.drawAxisLineEnabled = false
         self.lineChartView.leftAxis.drawGridLinesEnabled = false
-        
         
         self.lineChartView.rightAxis.drawAxisLineEnabled = false
         self.lineChartView.rightAxis.drawGridLinesEnabled = false
@@ -124,8 +90,9 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         let expertData = loadExpertData()
         
-        printChart(recordedDataSet: expertData, sensor: 8, person: "expert")
+        printChart(recordedDataSet: expertData, sensor: selectedSensor, person: "expert")
     }
+    
     
     override func viewWillAppear(_ animated: Bool) {
         //Daten aus CoreData laden
@@ -134,6 +101,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         //TableView neu laden
         tableView.reloadData()
     }
+    
     
     func coreDataToStruct(recordedDataSet: RecordedDataSet) -> RecordedDataSetStruct {
         let date = Date()
@@ -309,6 +277,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         return expertRecordedDataSet
     }
     
+    
     func printChart(recordedDataSet: RecordedDataSetStruct, sensor: Int, person: String) {
         
         //Den letzten angezeigten Datensatz entfernen, Expertendaten da lassen
@@ -392,6 +361,52 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         self.lineChartView.data = data
     }
     
+    
+    /**
+     Die Sensordaten aufnehmen
+    */
+    @IBAction func startRecording(_ sender: AnyObject) {
+        
+        //Wieviele Sekunden aufgenommen werden soll
+        countdownSeconds = 12
+        
+        timestampArray = []
+        accXArray = []
+        
+        //Wenn die App im Simulator läuft, ist test = false => kein DeviceMotion available
+        //var test = cmMotionManager.isDeviceMotionAvailable
+        
+        self.cmMotionManager.startAccelerometerUpdates(to: nsOperationQueue, withHandler: {
+            
+            (accelSensor, error) -> Void in
+            if(error != nil) {
+                NSLog("\(error)")
+            } else {
+                //Werte aufnehmen
+                let timestamp: Date = Date()
+                self.timestampArray.append(timestamp)
+                
+                let accel = accelSensor!.acceleration
+                self.accXArray.append(accel.x)
+                self.accYArray.append(accel.y)
+                self.accZArray.append(accel.z)
+                
+                //Die folgenden Werte müssen vom MotionSensor ausgelesen werden, nicht vom AccelerationSensor
+                //                let rotX = 0.0
+                //                let rotY = 0.0
+                //                let rotZ = 0.0
+                //
+                //                let yaw = 0.0
+                //                let roll = 0.0
+                //                let pitch = 0.0
+            }
+        })
+        
+        
+        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(ViewController.update), userInfo: nil, repeats: true)
+    }
+
+    
     //läuft 12 Sekunden lang, dann werden die Daten aus Array in CoreData gespeichert
     func update() {
         if(countdownSeconds >= 0) {
@@ -415,7 +430,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         //Neuen Datensatz erstellen
         let recordedDataSet = RecordedDataSet(context: context)
-        recordedDataSet.recordingTime = timestampArray[0] as Date
+        recordedDataSet.recordingTime = timestampArray[0]
         
         
         for i in 0..<timestampArray.count {
@@ -423,10 +438,10 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
             //Die aufgenommenen Daten in ein SensorData Objekt speichern
             let sensorData = SensorData(context: context)
             
-            sensorData.loggingTime = timestampArray[i] as Date
+            sensorData.loggingTime = timestampArray[i]
             sensorData.accelerationX = accXArray[i]
-            sensorData.accelerationY = 0.0
-            sensorData.accelerationZ = 0.0
+            sensorData.accelerationY = accYArray[i]
+            sensorData.accelerationZ = accZArray[i]
             
             sensorData.rotationX = 0.0
             sensorData.rotationY = 0.0
@@ -526,11 +541,11 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     */
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        var accX: [Double] = []
-        var sensorDataArray: [SensorData] = []
+//        var accX: [Double] = []
+//        var sensorDataArray: [SensorData] = []
         
         let recordedDataSet = recordedDataSets[indexPath.row]
-        let sensorDatas = recordedDataSet.sensorData
+//        let sensorDatas = recordedDataSet.sensorData
         
         
         
@@ -541,56 +556,58 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         let recordedDataSetStruct = coreDataToStruct(recordedDataSet: recordedDataSet)
         
         
-        
-        for sensorData in sensorDatas! {
-            sensorDataArray.append(sensorData as! SensorData)
-        }
-    
-        //SensorDaten werden als unsortiertes Set geladen, hier nach Zeit sortieren:
-        sensorDataArray.sort{$0.loggingTime < $1.loggingTime}
-            
-        for i in 0..<sensorDataArray.count {
-            accX.append(sensorDataArray[i].accelerationX)
-        }
-        
-        //Die Beschriftung für den Graph erstellen:
-        let timestamp = recordedDataSet.recordingTime
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd.MM.yyyy"
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm:ss"
-        var dateString = ""
-        var timeString = ""
-        
-        if timestamp != nil {
-            dateString = dateFormatter.string(from: timestamp!)
-            timeString = timeFormatter.string(from: timestamp!)
-        }
-        
-        let graphLabelText = "\(dateString) - \(timeString)"
+        printChart(recordedDataSet: recordedDataSetStruct, sensor: selectedSensor, person: "user")
         
         
-        //Das Chart updaten:
-        
-        //Den letzten angezeigten Datensatz entfernen, Expertendaten da lassen
-        if (dataSets.count > 1) {
-            dataSets.removeLast()
-        }
-        
-        var yValues:[ChartDataEntry] = [ChartDataEntry]()
-        for i in 0 ..< accX.count {
-            yValues.append(ChartDataEntry(x: Double(i), y: accX[i]))
-        }
-        
-        
-        let set:LineChartDataSet = LineChartDataSet(values: yValues, label: graphLabelText)
-        set.axisDependency = .left
-        set.mode = .cubicBezier
-        set.drawCirclesEnabled = false
-        set.colors = [UIColor.red]
-        dataSets.append(set)
-        let data:LineChartData = LineChartData(dataSets: dataSets)
-        self.lineChartView.data = data
+//        for sensorData in sensorDatas! {
+//            sensorDataArray.append(sensorData as! SensorData)
+//        }
+//    
+//        //SensorDaten werden als unsortiertes Set geladen, hier nach Zeit sortieren:
+//        sensorDataArray.sort{$0.loggingTime < $1.loggingTime}
+//            
+//        for i in 0..<sensorDataArray.count {
+//            accX.append(sensorDataArray[i].accelerationX)
+//        }
+//        
+//        //Die Beschriftung für den Graph erstellen:
+//        let timestamp = recordedDataSet.recordingTime
+//        let dateFormatter = DateFormatter()
+//        dateFormatter.dateFormat = "dd.MM.yyyy"
+//        let timeFormatter = DateFormatter()
+//        timeFormatter.dateFormat = "HH:mm:ss"
+//        var dateString = ""
+//        var timeString = ""
+//        
+//        if timestamp != nil {
+//            dateString = dateFormatter.string(from: timestamp!)
+//            timeString = timeFormatter.string(from: timestamp!)
+//        }
+//        
+//        let graphLabelText = "\(dateString) - \(timeString)"
+//        
+//        
+//        //Das Chart updaten:
+//        
+//        //Den letzten angezeigten Datensatz entfernen, Expertendaten da lassen
+//        if (dataSets.count > 1) {
+//            dataSets.removeLast()
+//        }
+//        
+//        var yValues:[ChartDataEntry] = [ChartDataEntry]()
+//        for i in 0 ..< accX.count {
+//            yValues.append(ChartDataEntry(x: Double(i), y: accX[i]))
+//        }
+//        
+//        
+//        let set:LineChartDataSet = LineChartDataSet(values: yValues, label: graphLabelText)
+//        set.axisDependency = .left
+//        set.mode = .cubicBezier
+//        set.drawCirclesEnabled = false
+//        set.colors = [UIColor.red]
+//        dataSets.append(set)
+//        let data:LineChartData = LineChartData(dataSets: dataSets)
+//        self.lineChartView.data = data
         
     }
     
@@ -599,6 +616,10 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
      */
     func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
 
+    }
+    
+    @IBAction func toggleSensor(_ sender: UISegmentedControl) {
+        self.selectedSensor = sender.selectedSegmentIndex
     }
     
     override func didReceiveMemoryWarning() {

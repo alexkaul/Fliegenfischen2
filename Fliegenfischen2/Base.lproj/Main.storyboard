@@ -43,11 +43,24 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </tableView>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Etb-D1-lIG">
+                                <frame key="frameInset" minX="96" minY="266" width="183" height="29"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <segments>
+                                    <segment title="Acc X"/>
+                                    <segment title="Acc Y"/>
+                                    <segment title="Acc Z"/>
+                                </segments>
+                                <connections>
+                                    <action selector="toggleSensor:" destination="BYZ-38-t0r" eventType="valueChanged" id="1J5-Nu-EDC"/>
+                                </connections>
+                            </segmentedControl>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </view>
                     <connections>
                         <outlet property="lineChartView" destination="sp2-4U-SVE" id="ogW-OA-G8E"/>
+                        <outlet property="sensorSelector" destination="Etb-D1-lIG" id="oOi-gA-177"/>
                         <outlet property="tableView" destination="z9x-zX-kFA" id="zPc-GI-pQD"/>
                         <outlet property="timeLabel" destination="17G-m0-BA9" id="J5v-Bo-fPf"/>
                     </connections>
