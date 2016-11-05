@@ -44,12 +44,18 @@
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </tableView>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Etb-D1-lIG">
-                                <frame key="frameInset" minX="96" minY="266" width="183" height="29"/>
+                                <frame key="frameInset" minY="266" width="375" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <segments>
-                                    <segment title="Acc X"/>
+                                    <segment title="AccX"/>
                                     <segment title="Acc Y"/>
-                                    <segment title="Acc Z"/>
+                                    <segment title="AccZ"/>
+                                    <segment title="RotX"/>
+                                    <segment title="RotY"/>
+                                    <segment title="RotZ"/>
+                                    <segment title="Yaw"/>
+                                    <segment title="Roll"/>
+                                    <segment title="Pitch"/>
                                 </segments>
                                 <connections>
                                     <action selector="toggleSensor:" destination="BYZ-38-t0r" eventType="valueChanged" id="1J5-Nu-EDC"/>

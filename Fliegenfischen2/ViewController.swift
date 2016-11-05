@@ -11,6 +11,12 @@ struct RecordedDataSetStruct {
     var id: Int64   //zur Zeit ohne Bedeutung
     var recordingTime: Date
     var sensorDataStruct: [SensorDataStruct]
+    
+    init() {
+        id = 0
+        recordingTime = Date()
+        sensorDataStruct = []
+    }
 }
 
 struct SensorDataStruct {
@@ -51,8 +57,9 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     var rollArray: [Double] = []
     var pitchArray: [Double] = []
     
-    var selectedSensor = 2
-    
+    var selectedSensor = 0
+    var expertData = RecordedDataSetStruct()
+    var userData = RecordedDataSetStruct()
     
     var dataSets: [LineChartDataSet] = [LineChartDataSet]()
     
@@ -72,8 +79,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         tableView.delegate = self
         
         //Device MotionManager für andere Sensordaten als Accelaration benutzen
-        self.cmMotionManager.deviceMotionUpdateInterval = 0.01
-        self.cmMotionManager.accelerometerUpdateInterval = 0.01
+        self.cmMotionManager.deviceMotionUpdateInterval = 0.02
+        //self.cmMotionManager.accelerometerUpdateInterval = 0.01
         
         self.lineChartView.delegate = self
         self.lineChartView.chartDescription?.text = ""
@@ -88,7 +95,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         self.lineChartView.xAxis.drawAxisLineEnabled = false
         self.lineChartView.xAxis.drawGridLinesEnabled = false
         
-        let expertData = loadExpertData()
+        expertData = loadExpertData()
         
         printChart(recordedDataSet: expertData, sensor: selectedSensor, person: "expert")
     }
@@ -105,8 +112,9 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     
     func coreDataToStruct(recordedDataSet: RecordedDataSet) -> RecordedDataSetStruct {
         let date = Date()
-        let sensorDataStruct: [SensorDataStruct] = []
-        var recordedDataSetStruct = RecordedDataSetStruct(id: 0, recordingTime: date, sensorDataStruct: sensorDataStruct)
+        //let sensorDataStruct: [SensorDataStruct] = []
+        //var recordedDataSetStruct = RecordedDataSetStruct(id: 0, recordingTime: date, sensorDataStruct: sensorDataStruct)
+        var recordedDataSetStruct = RecordedDataSetStruct()
         
         var sensorDataCoreDataArray: [SensorData] = []
         let sensorDataFromCoreDataSet = recordedDataSet.sensorData
@@ -244,8 +252,9 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         }
         
         let date = Date()
-        let sensorDataStruct: [SensorDataStruct] = []
-        var expertRecordedDataSet = RecordedDataSetStruct(id: 0, recordingTime: date, sensorDataStruct: sensorDataStruct)
+        //let sensorDataStruct: [SensorDataStruct] = []
+        //var expertRecordedDataSet = RecordedDataSetStruct(id: 0, recordingTime: date, sensorDataStruct: sensorDataStruct)
+        var expertRecordedDataSet = RecordedDataSetStruct()
         
         if !logTime.isEmpty {
             expertRecordedDataSet.recordingTime = logTime[0] as Date
@@ -260,18 +269,21 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         logTime.count == motionRoll.count &&
         logTime.count == motionPitch.count {
             for i in 0 ..< logTime.count {
-                var sensorDataStruct = SensorDataStruct(loggingTime: date, accelerationX: 0, accelerationY: 0, accelerationZ: 0, motionPitch: 0, motionRoll: 0, motionYaw: 0, rotationX: 0, rotationY: 0, rotationZ: 0)
-                sensorDataStruct.loggingTime = logTime[i]
-                sensorDataStruct.accelerationX = accelerationX[i]
-                sensorDataStruct.accelerationY = accelerationY[i]
-                sensorDataStruct.accelerationZ = accelerationZ[i]
-                sensorDataStruct.rotationX = rotationX[i]
-                sensorDataStruct.rotationY = rotationY[i]
-                sensorDataStruct.rotationZ = rotationZ[i]
-                sensorDataStruct.motionYaw = motionYaw[i]
-                sensorDataStruct.motionRoll = motionRoll[i]
-                sensorDataStruct.motionPitch = motionPitch[i]
-                expertRecordedDataSet.sensorDataStruct.append(sensorDataStruct)
+                //für weniger Daten, nur jeden zweiten Wert nehmen
+                if i%2 == 0 {
+                    var sensorDataStruct = SensorDataStruct(loggingTime: date, accelerationX: 0, accelerationY: 0, accelerationZ: 0, motionPitch: 0, motionRoll: 0, motionYaw: 0, rotationX: 0, rotationY: 0, rotationZ: 0)
+                    sensorDataStruct.loggingTime = logTime[i]
+                    sensorDataStruct.accelerationX = accelerationX[i]
+                    sensorDataStruct.accelerationY = accelerationY[i]
+                    sensorDataStruct.accelerationZ = accelerationZ[i]
+                    sensorDataStruct.rotationX = rotationX[i]
+                    sensorDataStruct.rotationY = rotationY[i]
+                    sensorDataStruct.rotationZ = rotationZ[i]
+                    sensorDataStruct.motionYaw = motionYaw[i]
+                    sensorDataStruct.motionRoll = motionRoll[i]
+                    sensorDataStruct.motionPitch = motionPitch[i]
+                    expertRecordedDataSet.sensorDataStruct.append(sensorDataStruct)
+                }
             }
         }
         return expertRecordedDataSet
@@ -281,9 +293,9 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     func printChart(recordedDataSet: RecordedDataSetStruct, sensor: Int, person: String) {
         
         //Den letzten angezeigten Datensatz entfernen, Expertendaten da lassen
-        if (dataSets.count > 1) {
-            dataSets.removeLast()
-        }
+//        if (dataSets.count > 1) {
+//            dataSets.removeLast()
+//        }
         
         //var sensorDataArray: [SensorDataStruct] = []
         var sensorValuesArray: [Double] = []
@@ -371,14 +383,15 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         countdownSeconds = 12
         
         timestampArray = []
-        accXArray = []
+        //accXArray = []
         
         //Wenn die App im Simulator läuft, ist test = false => kein DeviceMotion available
         //var test = cmMotionManager.isDeviceMotionAvailable
         
-        self.cmMotionManager.startAccelerometerUpdates(to: nsOperationQueue, withHandler: {
+        //self.cmMotionManager.startAccelerometerUpdates(to: nsOperationQueue, withHandler: {
+        self.cmMotionManager.startDeviceMotionUpdates(to: nsOperationQueue, withHandler: {
             
-            (accelSensor, error) -> Void in
+            (motionSensor, error) -> Void in
             if(error != nil) {
                 NSLog("\(error)")
             } else {
@@ -386,11 +399,21 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
                 let timestamp: Date = Date()
                 self.timestampArray.append(timestamp)
                 
-                let accel = accelSensor!.acceleration
+                let accel = motionSensor!.userAcceleration
                 self.accXArray.append(accel.x)
                 self.accYArray.append(accel.y)
                 self.accZArray.append(accel.z)
                 
+                let rota = motionSensor!.rotationRate
+                self.rotXArray.append(rota.x)
+                self.rotYArray.append(rota.y)
+                self.rotZArray.append(rota.z)
+                
+                let atti = motionSensor!.attitude
+                self.yawArray.append(atti.yaw)
+                self.rollArray.append(atti.roll)
+                self.pitchArray.append(atti.pitch)
+
                 //Die folgenden Werte müssen vom MotionSensor ausgelesen werden, nicht vom AccelerationSensor
                 //                let rotX = 0.0
                 //                let rotY = 0.0
@@ -414,8 +437,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
             countdownSeconds -= 1
         } else {
             timeLabel.text = "Verbleibende Zeit"
-            //cmMotionManager.stopDeviceMotionUpdates()
-            cmMotionManager.stopAccelerometerUpdates()
+            cmMotionManager.stopDeviceMotionUpdates()
+            //cmMotionManager.stopAccelerometerUpdates()
             timer.invalidate()
             saveDataToCoreData()
         }
@@ -443,13 +466,13 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
             sensorData.accelerationY = accYArray[i]
             sensorData.accelerationZ = accZArray[i]
             
-            sensorData.rotationX = 0.0
-            sensorData.rotationY = 0.0
-            sensorData.rotationZ = 0.0
+            sensorData.rotationX = rotXArray[i]
+            sensorData.rotationY = rotYArray[i]
+            sensorData.rotationZ = rotZArray[i]
             
-            sensorData.motionYaw = 0.0
-            sensorData.motionRoll = 0.0
-            sensorData.motionPitch = 0.0
+            sensorData.motionYaw = yawArray[i]
+            sensorData.motionRoll = rollArray[i]
+            sensorData.motionPitch = pitchArray[i]
             
             //Die gerade aufgenommenen Werte dem Datensatz hinzufügen
             recordedDataSet.addToSensorData(sensorData)
@@ -553,10 +576,10 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         //TODO: Hier die geholten Sachen in lokale Klassen umwandeln!!!
         //test, obs klappt:
-        let recordedDataSetStruct = coreDataToStruct(recordedDataSet: recordedDataSet)
+        userData = coreDataToStruct(recordedDataSet: recordedDataSet)
         
         
-        printChart(recordedDataSet: recordedDataSetStruct, sensor: selectedSensor, person: "user")
+        printChart(recordedDataSet: userData, sensor: selectedSensor, person: "user")
         
         
 //        for sensorData in sensorDatas! {
@@ -619,7 +642,10 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     }
     
     @IBAction func toggleSensor(_ sender: UISegmentedControl) {
+        dataSets.removeAll()
         self.selectedSensor = sender.selectedSegmentIndex
+        printChart(recordedDataSet: expertData, sensor: self.selectedSensor, person: "expert")
+        printChart(recordedDataSet: userData, sensor: self.selectedSensor, person: "user")
     }
     
     override func didReceiveMemoryWarning() {
