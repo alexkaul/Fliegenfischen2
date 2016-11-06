@@ -37,6 +37,7 @@ import Charts
 import CoreMotion
 import CoreData
 import SwiftyJSON
+import AVFoundation
 
 class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, UITableViewDataSource, UITableViewDelegate {
     
@@ -436,6 +437,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
             timeLabel.text = String(countdownSeconds) + " Sekunden"
             countdownSeconds -= 1
         } else {
+            AudioServicesPlaySystemSound(1003) //1016
             timeLabel.text = "Verbleibende Zeit"
             cmMotionManager.stopDeviceMotionUpdates()
             //cmMotionManager.stopAccelerometerUpdates()
