@@ -43,8 +43,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     
     let cmMotionManager = CMMotionManager()
     var nsOperationQueue = OperationQueue()
-    var countdownSeconds = 0
     var timer: Timer!
+    
     
     //In diesen Arrays werden die aufgenommen Sensordaten zwischengespeichert, bis sie persistiert werden
     var timestampArray: [Date] = []
@@ -62,19 +62,28 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     var expertData = RecordedDataSetStruct()
     var userData = RecordedDataSetStruct()
     
+    @IBOutlet weak var timeSelectorSliderVar: UISlider!
+    var selectedTime = 10
+    var countdownSeconds = 10
+    
     var dataSets: [LineChartDataSet] = [LineChartDataSet]()
     
     //Für die TableView
     var recordedDataSets: [RecordedDataSet] = []
     
     @IBOutlet weak var sensorSelector: UISegmentedControl!
-
+    @IBOutlet weak var timeLabel: UILabel!
     @IBOutlet weak var lineChartView: LineChartView!
     @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var timeLabel: UILabel!
+
+    @IBOutlet weak var timeSelectorLabel: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        timeSelectorSliderVar.setValue(Float(self.selectedTime), animated: false)
+        timeSelectorLabel.text = String(self.selectedTime)
+        self.countdownSeconds = self.selectedTime
         
         tableView.dataSource = self
         tableView.delegate = self
@@ -85,6 +94,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         self.lineChartView.delegate = self
         self.lineChartView.chartDescription?.text = ""
+
         self.lineChartView.noDataText = "keine Daten vorhanden"
         
         self.lineChartView.leftAxis.drawAxisLineEnabled = false
@@ -95,6 +105,10 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         self.lineChartView.xAxis.drawAxisLineEnabled = false
         self.lineChartView.xAxis.drawGridLinesEnabled = false
+        
+        self.lineChartView.pinchZoomEnabled = false
+        self.lineChartView.doubleTapToZoomEnabled = false
+        
         
         expertData = loadExpertData()
         
@@ -380,9 +394,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     */
     @IBAction func startRecording(_ sender: AnyObject) {
         
-        //Wieviele Sekunden aufgenommen werden soll
-        countdownSeconds = 12
-        
+        self.countdownSeconds = self.selectedTime
         timestampArray = []
         //accXArray = []
         
@@ -433,9 +445,10 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     
     //läuft 12 Sekunden lang, dann werden die Daten aus Array in CoreData gespeichert
     func update() {
-        if(countdownSeconds >= 0) {
-            timeLabel.text = String(countdownSeconds) + " Sekunden"
-            countdownSeconds -= 1
+        if(self.countdownSeconds >= 0) {
+            let s = String(self.countdownSeconds)
+            timeLabel.text = s + " Sekunden"
+            self.countdownSeconds -= 1
         } else {
             AudioServicesPlaySystemSound(1003) //1016
             timeLabel.text = "Verbleibende Zeit"
@@ -642,6 +655,13 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
 
     }
+    
+    @IBAction func timeSelectorSlieder(_ sender: UISlider) {
+        self.selectedTime = Int(sender.value)
+        timeSelectorLabel.text = String(self.selectedTime)
+    }
+
+
     
     @IBAction func toggleSensor(_ sender: UISegmentedControl) {
         dataSets.removeAll()
