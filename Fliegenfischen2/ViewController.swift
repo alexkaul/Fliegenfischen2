@@ -75,7 +75,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     @IBOutlet weak var timeLabel: UILabel!
     @IBOutlet weak var lineChartView: LineChartView!
     @IBOutlet weak var tableView: UITableView!
-
+    @IBOutlet weak var toggleExpertsVar: UISegmentedControl!
     @IBOutlet weak var timeSelectorLabel: UILabel!
     
     override func viewDidLoad() {
@@ -102,6 +102,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         self.lineChartView.rightAxis.drawAxisLineEnabled = false
         self.lineChartView.rightAxis.drawGridLinesEnabled = false
+
         
         self.lineChartView.xAxis.drawAxisLineEnabled = false
         self.lineChartView.xAxis.drawGridLinesEnabled = false
@@ -109,8 +110,9 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         self.lineChartView.pinchZoomEnabled = false
         self.lineChartView.doubleTapToZoomEnabled = false
         
+        toggleExpertsVar.selectedSegmentIndex = 0
         
-        expertData = loadExpertData()
+        expertData = loadExpertData(expertFlag: 0)
         
         printChart(recordedDataSet: expertData, sensor: selectedSensor, person: "expert")
     }
@@ -164,7 +166,7 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
     }
     
-    func loadExpertData() -> RecordedDataSetStruct {
+    func loadExpertData(expertFlag: Int) -> RecordedDataSetStruct {
         var logTime: [Date] = []
         var accelerationX: [Double] = []
         var accelerationY: [Double] = []
@@ -176,9 +178,24 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         var motionRoll: [Double] = []
         var motionPitch: [Double] = []
         
-        if let path = Bundle.main.path(forResource: "expertData", ofType: "json") {
+        var path: String?
+        
+        if expertFlag == 0 {
+            path = Bundle.main.path(forResource: "expertData", ofType: "json")
+        }
+        
+        if expertFlag == 1 {
+            let p = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
+            path = p.first
+            if path != nil {
+                path = path! + "/expertDataNew.json"
+            }
+        }
+
+        
+        if path != nil {
             do {
-                let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .alwaysMapped)
+                let data = try Data(contentsOf: URL(fileURLWithPath: path!), options: .alwaysMapped)
                 let jsonObj = JSON(data: data)
                 
                 if jsonObj != JSON.null {
@@ -510,19 +527,12 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         return s
     }
     
-    
-    
-    @IBAction func saveDataToFile(_ sender: Any) {
-        //saveDataToJsonFile(recordedDataSetStruct: <#T##RecordedDataSetStruct#>)
-        saveDataToJsonFile()
-    }
-    
     //func saveDataToJsonFile(recordedDataSetStruct: RecordedDataSetStruct) {
     func saveDataToJsonFile() {
         let p = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
         
         if let path = p.first {
-        
+            
             do {
                 // Zeichenkette speichern
                 let s = dataToJsonString()
@@ -534,6 +544,13 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
             }
         }
     }
+    
+    @IBAction func saveDataToFile(_ sender: Any) {
+        //saveDataToJsonFile(recordedDataSetStruct: <#T##RecordedDataSetStruct#>)
+        saveDataToJsonFile()
+    }
+    
+
     
     
     /**
@@ -808,6 +825,12 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         timeSelectorLabel.text = String(self.selectedTime)
     }
 
+    @IBAction func toggleExperts(_ sender: UISegmentedControl) {
+        dataSets.removeAll()
+        expertData = loadExpertData(expertFlag: sender.selectedSegmentIndex)
+        printChart(recordedDataSet: expertData, sensor: self.selectedSensor, person: "expert")
+        printChart(recordedDataSet: userData, sensor: self.selectedSensor, person: "user")
+    }
 
     
     @IBAction func toggleSensor(_ sender: UISegmentedControl) {

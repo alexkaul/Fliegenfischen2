@@ -22,7 +22,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sp2-4U-SVE" customClass="LineChartView" customModule="Charts">
-                                <rect key="frame" x="16" y="28" width="343" height="215"/>
+                                <rect key="frame" x="16" y="28" width="343" height="198"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
@@ -42,7 +42,7 @@
                                 </connections>
                             </button>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Etb-D1-lIG">
-                                <rect key="frame" x="0.0" y="266" width="375" height="29"/>
+                                <rect key="frame" x="0.0" y="285" width="375" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <segments>
                                     <segment title="AccX"/>
@@ -74,18 +74,36 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="z9x-zX-kFA">
-                                <rect key="frame" x="16" y="302" width="343" height="199"/>
+                                <rect key="frame" x="16" y="321" width="343" height="180"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </tableView>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2gw-qI-uJP">
-                                <rect key="frame" x="289" y="552" width="70" height="30"/>
+                                <rect key="frame" x="289" y="578" width="70" height="30"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Speichern"/>
                                 <connections>
                                     <action selector="saveDataToFile:" destination="BYZ-38-t0r" eventType="touchUpInside" id="TAk-nm-gpM"/>
                                 </connections>
                             </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Ausgewählte Daten als Experte:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5qc-lZ-nCe">
+                                <rect key="frame" x="16" y="582" width="242" height="21"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="LDW-HA-AD6">
+                                <rect key="frame" x="16" y="249" width="343" height="29"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <segments>
+                                    <segment title="Standard Experte"/>
+                                    <segment title="Benutzerdef. Experte"/>
+                                </segments>
+                                <connections>
+                                    <action selector="toggleExperts:" destination="BYZ-38-t0r" eventType="valueChanged" id="XXn-aF-dqN"/>
+                                </connections>
+                            </segmentedControl>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </view>
@@ -96,6 +114,7 @@
                         <outlet property="timeLabel" destination="17G-m0-BA9" id="APN-8F-9kt"/>
                         <outlet property="timeSelectorLabel" destination="FbX-xO-vDE" id="1Lh-2h-4bW"/>
                         <outlet property="timeSelectorSliderVar" destination="yeA-bQ-Pek" id="jJk-HD-GwJ"/>
+                        <outlet property="toggleExpertsVar" destination="LDW-HA-AD6" id="id4-mm-mfX"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
