@@ -389,6 +389,153 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     }
     
     
+    //TODO hier überall userData statt expertData
+    func dataToJsonString() -> String {
+        var s = "{ \"loggingTime\" : [\""
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+            let t = String(describing: dateFormatter.string(from: expertData.sensorDataStruct[i].loggingTime))
+            s = s.appending(t)
+            s = s.appending("\",\"")
+        }
+        
+        //letztes Anführungszeichen löschen
+        s.remove(at: s.index(before: s.endIndex))
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("],\"accelerometerAccelerationX\" : [")
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let t = String(expertData.sensorDataStruct[i].accelerationX)
+            s = s.appending(t)
+            s = s.appending(",")
+        }
+        
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("],\"accelerometerAccelerationY\" : [")
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let t = String(expertData.sensorDataStruct[i].accelerationY)
+            s = s.appending(t)
+            s = s.appending(",")
+        }
+        
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("],\"accelerometerAccelerationZ\" : [")
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let t = String(expertData.sensorDataStruct[i].accelerationZ)
+            s = s.appending(t)
+            s = s.appending(",")
+        }
+        
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("],\"gyroRotationX\" : [")
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let t = String(expertData.sensorDataStruct[i].rotationX)
+            s = s.appending(t)
+            s = s.appending(",")
+        }
+        
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("],\"gyroRotationY\" : [")
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let t = String(expertData.sensorDataStruct[i].rotationY)
+            s = s.appending(t)
+            s = s.appending(",")
+        }
+        
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("],\"gyroRotationZ\" : [")
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let t = String(expertData.sensorDataStruct[i].rotationZ)
+            s = s.appending(t)
+            s = s.appending(",")
+        }
+        
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("],\"motionYaw\" : [")
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let t = String(expertData.sensorDataStruct[i].motionYaw)
+            s = s.appending(t)
+            s = s.appending(",")
+        }
+        
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("],\"motionRoll\" : [")
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let t = String(expertData.sensorDataStruct[i].motionRoll)
+            s = s.appending(t)
+            s = s.appending(",")
+        }
+        
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("],\"motionPitch\" : [")
+        
+        for i in 0..<expertData.sensorDataStruct.count {
+            let t = String(expertData.sensorDataStruct[i].motionPitch)
+            s = s.appending(t)
+            s = s.appending(",")
+        }
+        
+        //letzes Komma löschen
+        s.remove(at: s.index(before: s.endIndex))
+        
+        s = s.appending("]}")
+        
+        return s
+    }
+    
+    
+    
+    @IBAction func saveDataToFile(_ sender: Any) {
+        //saveDataToJsonFile(recordedDataSetStruct: <#T##RecordedDataSetStruct#>)
+        saveDataToJsonFile()
+    }
+    
+    //func saveDataToJsonFile(recordedDataSetStruct: RecordedDataSetStruct) {
+    func saveDataToJsonFile() {
+        let p = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
+        
+        if let path = p.first {
+        
+            do {
+                // Zeichenkette speichern
+                let s = dataToJsonString()
+                try s.write(toFile: path + "/expertDataNew.json", atomically : false , encoding: String.Encoding.utf8 )
+                // Textdatei in eine Variable lesen
+                //let t = try String(contentsOfFile: path + "/test.txt", encoding: String.Encoding.utf8 )
+            } catch let err as NSError {
+                print(err.description)
+            }
+        }
+    }
+    
+    
     /**
      Die Sensordaten aufnehmen
     */
