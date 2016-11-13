@@ -406,14 +406,13 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
     }
     
     
-    //TODO hier überall userData statt expertData
     func dataToJsonString() -> String {
         var s = "{ \"loggingTime\" : [\""
         
-        for i in 0..<expertData.sensorDataStruct.count {
+        for i in 0..<userData.sensorDataStruct.count {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-            let t = String(describing: dateFormatter.string(from: expertData.sensorDataStruct[i].loggingTime))
+            let t = String(describing: dateFormatter.string(from: userData.sensorDataStruct[i].loggingTime))
             s = s.appending(t)
             s = s.appending("\",\"")
         }
@@ -425,8 +424,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         s = s.appending("],\"accelerometerAccelerationX\" : [")
         
-        for i in 0..<expertData.sensorDataStruct.count {
-            let t = String(expertData.sensorDataStruct[i].accelerationX)
+        for i in 0..<userData.sensorDataStruct.count {
+            let t = String(userData.sensorDataStruct[i].accelerationX)
             s = s.appending(t)
             s = s.appending(",")
         }
@@ -436,8 +435,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         s = s.appending("],\"accelerometerAccelerationY\" : [")
         
-        for i in 0..<expertData.sensorDataStruct.count {
-            let t = String(expertData.sensorDataStruct[i].accelerationY)
+        for i in 0..<userData.sensorDataStruct.count {
+            let t = String(userData.sensorDataStruct[i].accelerationY)
             s = s.appending(t)
             s = s.appending(",")
         }
@@ -447,8 +446,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         s = s.appending("],\"accelerometerAccelerationZ\" : [")
         
-        for i in 0..<expertData.sensorDataStruct.count {
-            let t = String(expertData.sensorDataStruct[i].accelerationZ)
+        for i in 0..<userData.sensorDataStruct.count {
+            let t = String(userData.sensorDataStruct[i].accelerationZ)
             s = s.appending(t)
             s = s.appending(",")
         }
@@ -458,8 +457,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         s = s.appending("],\"gyroRotationX\" : [")
         
-        for i in 0..<expertData.sensorDataStruct.count {
-            let t = String(expertData.sensorDataStruct[i].rotationX)
+        for i in 0..<userData.sensorDataStruct.count {
+            let t = String(userData.sensorDataStruct[i].rotationX)
             s = s.appending(t)
             s = s.appending(",")
         }
@@ -469,8 +468,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         s = s.appending("],\"gyroRotationY\" : [")
         
-        for i in 0..<expertData.sensorDataStruct.count {
-            let t = String(expertData.sensorDataStruct[i].rotationY)
+        for i in 0..<userData.sensorDataStruct.count {
+            let t = String(userData.sensorDataStruct[i].rotationY)
             s = s.appending(t)
             s = s.appending(",")
         }
@@ -480,8 +479,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         s = s.appending("],\"gyroRotationZ\" : [")
         
-        for i in 0..<expertData.sensorDataStruct.count {
-            let t = String(expertData.sensorDataStruct[i].rotationZ)
+        for i in 0..<userData.sensorDataStruct.count {
+            let t = String(userData.sensorDataStruct[i].rotationZ)
             s = s.appending(t)
             s = s.appending(",")
         }
@@ -491,8 +490,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         s = s.appending("],\"motionYaw\" : [")
         
-        for i in 0..<expertData.sensorDataStruct.count {
-            let t = String(expertData.sensorDataStruct[i].motionYaw)
+        for i in 0..<userData.sensorDataStruct.count {
+            let t = String(userData.sensorDataStruct[i].motionYaw)
             s = s.appending(t)
             s = s.appending(",")
         }
@@ -502,8 +501,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         s = s.appending("],\"motionRoll\" : [")
         
-        for i in 0..<expertData.sensorDataStruct.count {
-            let t = String(expertData.sensorDataStruct[i].motionRoll)
+        for i in 0..<userData.sensorDataStruct.count {
+            let t = String(userData.sensorDataStruct[i].motionRoll)
             s = s.appending(t)
             s = s.appending(",")
         }
@@ -513,8 +512,8 @@ class ViewController: UIViewController, ChartViewDelegate, UIAlertViewDelegate, 
         
         s = s.appending("],\"motionPitch\" : [")
         
-        for i in 0..<expertData.sensorDataStruct.count {
-            let t = String(expertData.sensorDataStruct[i].motionPitch)
+        for i in 0..<userData.sensorDataStruct.count {
+            let t = String(userData.sensorDataStruct[i].motionPitch)
             s = s.appending(t)
             s = s.appending(",")
         }
